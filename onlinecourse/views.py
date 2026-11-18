@@ -170,11 +170,21 @@ def show_exam_result(request, course_id, submission_id):
         total_possible += question.grade
         if is_correct:
             total_score += question.grade
+        choice_results = [
+            {
+                'choice': choice,
+                'selected': choice.id in selected_question_ids,
+                'correct': choice.is_correct,
+            }
+            for choice in question.choice_set.all()
+        ]
         question_results.append({
             'question': question,
             'is_correct': is_correct,
             'selected_ids': selected_question_ids,
             'correct_ids': correct_ids,
+            'choice_results': choice_results,
+            'earned_score': question.grade if is_correct else 0,
         })
 
     grade = round(100 * total_score / total_possible, 2) if total_possible else 0
