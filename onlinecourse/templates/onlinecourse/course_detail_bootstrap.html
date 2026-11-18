@@ -50,7 +50,58 @@
                     </div>
                 {% endfor %}
             </div>
-            <!-- Course detail template changes go here -->
+            <!-- Examination: available to authenticated learners -->
+            {% if user.is_authenticated %}
+            <div class="card mt-4 mb-4">
+                <div class="card-header">
+                    <h4 class="mb-0">Course Exam</h4>
+                </div>
+                <div class="card-body">
+                    <p>Select all correct answers for each question.</p>
+                    <button class="btn btn-primary" type="button" data-toggle="collapse"
+                            data-target="#courseExam" aria-expanded="false"
+                            aria-controls="courseExam">
+                        Start Exam
+                    </button>
+                    <div class="collapse mt-3" id="courseExam">
+                        {% if course.question_set.all %}
+                        <!-- The submission endpoint will be connected in the next task. -->
+                        <form id="exam-form" method="post">
+                            {% csrf_token %}
+                            {% for question in course.question_set.all %}
+                            <fieldset class="card mb-3">
+                                <div class="card-header">
+                                    <legend class="h5 mb-0">
+                                        Question {{ forloop.counter }}: {{ question.question_text }}
+                                    </legend>
+                                    <small class="text-muted">{{ question.grade }} point{{ question.grade|pluralize }}</small>
+                                </div>
+                                <div class="card-body">
+                                    {% for choice in question.choice_set.all %}
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox"
+                                               name="choice_{{ choice.id }}" value="{{ choice.id }}"
+                                               id="choice_{{ choice.id }}">
+                                        <label class="form-check-label" for="choice_{{ choice.id }}">
+                                            {{ choice.choice_text }}
+                                        </label>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </fieldset>
+                            {% endfor %}
+                            <button type="button" class="btn btn-success" disabled
+                                    title="Exam submission will be enabled in the next task">
+                                Submit Exam (Coming Next)
+                            </button>
+                        </form>
+                        {% else %}
+                        <p class="text-muted mt-3">No exam questions are available for this course yet.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
     </div>
 </body>
 </html>
