@@ -2,54 +2,93 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Exam Results - {{ course.name }}</title>
     {% load static %}
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 </head>
 <body>
-
- <nav class="navbar navbar-light bg-light">
-    <div class="container-fluid">
-        <div class="navbar-header">
-              <a class="navbar-brand" href="{% url 'onlinecourse:index' %}">Home</a>
-        </div>
-        <ul class="nav navbar-nav navbar-right">
+    <nav class="navbar navbar-light bg-light">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'onlinecourse:index' %}">Online Course</a>
             {% if user.is_authenticated %}
-            <li>
-                <a class="btn btn-link" href="#">{{ user.first_name }}({{ user.username }})</a>
-                <a class="btn btn-link" href="{% url 'onlinecourse:logout' %}">Logout</a>
-            </li>
-            {% else %}
-            <li>
-                <form class="form-inline" action="{% url 'onlinecourse:login' %}" method="post">
-                    {% csrf_token %}
-                    <div class="input-group">
-                        <input type="text" class="form-control" placeholder="Username" name="username" >
-                        <input type="password" class="form-control" placeholder="Username" name="psw" >
-                        <button class="btn btn-primary" type="submit">Login</button>
-                        <a class="btn btn-link" href="{% url 'onlinecourse:registration' %}">Sign Up</a>
-                    </div>
-                </form>
-            </li>
+            <div>
+                <span class="navbar-text mr-3">{{ user.first_name }} ({{ user.username }})</span>
+                <a href="{% url 'onlinecourse:logout' %}" class="btn btn-outline-secondary btn-sm">Logout</a>
+            </div>
             {% endif %}
-        </ul>
-    </div>
-</nav>
+        </div>
+    </nav>
 
-<div class="container-fluid">
-    {% if grade > 80 %}
-    <div class="alert alert-success">
-       <!--HINT Display passed info -->
-    </div>
+    <main class="container py-4">
+        <h1 class="h3 mb-2">{{ course.name }}</h1>
+        <p class="text-muted">Exam submission results</p>
+
+        {% if passed %}
+        <div class="alert alert-success" role="status">
+            <h2 class="h4">Congratulations! You passed the exam!</h2>
+            <p class="mb-0">Your final score is <strong>{{ grade }}%</strong>
+                ({{ total_score }} out of {{ total_possible }} points).</p>
+        </div>
         {% else %}
-        <div class="alert alert-danger">
-            <!--HINT Display failed info -->
+        <div class="alert alert-danger" role="status">
+            <h2 class="h4">You did not pass the exam this time.</h2>
+            <p class="mb-0">Your final score is <strong>{{ grade }}%</strong>
+                ({{ total_score }} out of {{ total_possible }} points).
+                Review your answers below and try again.</p>
         </div>
-        <a class="btn btn-link text-danger" href="{% url 'onlinecourse:course_details' course.id %}">Re-test</a>
+        <a class="btn btn-primary mb-3"
+           href="{% url 'onlinecourse:course_details' course.id %}#courseExam">
+            Re-test Exam
+        </a>
         {% endif %}
-        <div class="card-columns-vertical mt-1">
-        <h5 class="">Exam results</h5>
-            <!--HINT Display exam results-->
-        </div>
-    </div>
+
+        <section aria-labelledby="exam-results-heading" class="mt-3">
+            <h2 id="exam-results-heading" class="h4 mb-3">Exam results</h2>
+            {% for result in question_results %}
+            <div class="card mb-3">
+                <div class="card-header d-flex flex-wrap justify-content-between align-items-center">
+                    <h3 class="h5 mb-1">Question {{ forloop.counter }}:
+                        {{ result.question.question_text }}</h3>
+                    {% if result.is_correct %}
+                    <span class="badge badge-success">Correct &mdash; {{ result.earned_score }}/{{ result.question.grade }} points</span>
+                    {% else %}
+                    <span class="badge badge-danger">Incorrect &mdash; {{ result.earned_score }}/{{ result.question.grade }} points</span>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    {% for item in result.choice_results %}
+                    <div class="py-2 border-bottom">
+                        {% if item.selected %}
+                            {% if item.correct %}
+                            <span class="text-success font-weight-bold">&#10003; {{ item.choice.choice_text }}</span>
+                            <span class="badge badge-success ml-2">Selected - Correct</span>
+                            {% else %}
+                            <span class="text-danger font-weight-bold">&#10007; {{ item.choice.choice_text }}</span>
+                            <span class="badge badge-danger ml-2">Selected - Incorrect</span>
+                            {% endif %}
+                        {% elif item.correct %}
+                            <span class="text-success">{{ item.choice.choice_text }}</span>
+                            <span class="badge badge-info ml-2">Correct answer not selected</span>
+                        {% else %}
+                            <span class="text-muted">{{ item.choice.choice_text }}</span>
+                            <span class="badge badge-light ml-2">Not selected</span>
+                        {% endif %}
+                    </div>
+                    {% empty %}
+                    <p class="text-muted mb-0">No choices are available for this question.</p>
+                    {% endfor %}
+                </div>
+            </div>
+            {% empty %}
+            <p class="alert alert-info">No questions were found for this exam.</p>
+            {% endfor %}
+        </section>
+
+        <a class="btn btn-outline-primary mt-2"
+           href="{% url 'onlinecourse:course_details' course.id %}">
+            Back to course
+        </a>
+    </main>
 </body>
 </html>
