@@ -65,8 +65,7 @@
                     </button>
                     <div class="collapse mt-3" id="courseExam">
                         {% if course.question_set.all %}
-                        <!-- The submission endpoint will be connected in the next task. -->
-                        <form id="exam-form" method="post">
+                        <form id="exam-form" method="post" action="{% url 'onlinecourse:submit' course.id %}">
                             {% csrf_token %}
                             {% for question in course.question_set.all %}
                             <fieldset class="card mb-3">
@@ -90,9 +89,8 @@
                                 </div>
                             </fieldset>
                             {% endfor %}
-                            <button type="button" class="btn btn-success" disabled
-                                    title="Exam submission will be enabled in the next task">
-                                Submit Exam (Coming Next)
+                            <button type="submit" class="btn btn-success">
+                                Submit Exam
                             </button>
                         </form>
                         {% else %}
